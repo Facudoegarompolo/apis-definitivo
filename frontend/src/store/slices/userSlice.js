@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { fetchCarrito } from './cartSlice';
 
 const API_URL = 'http://localhost:8080/api/usuarios';
 

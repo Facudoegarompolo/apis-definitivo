@@ -30,6 +30,11 @@ export const styles = {
     color: '#2D3277',
     fontWeight: 'bold'
   },
+  itemQuantity: {
+    margin: '0.25rem 0',
+    color: '#555',
+    fontSize: '0.9rem'
+  },
   removeButton: {
     padding: '0.5rem',
     background: 'none',

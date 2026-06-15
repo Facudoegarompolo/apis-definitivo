@@ -1,14 +1,53 @@
 import { Link } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { vaciarCarritoDB } from '../store/slices/cartSlice';
 
 const formatPrice = (value) => Number(value ?? 0).toLocaleString('es-AR');
-
 const Checkout = () => {
-  const { cartItems, cartTotal, clearCart } = useCart();
+  const cartItems = useSelector((state) => state.cart.items || []);
+  const dispatch = useDispatch();
+  const usuarioId = useSelector((state) => state.user.user?.id);
 
-  const handleConfirmPurchase = () => {
-    clearCart();
-    alert('Compra finalizada');
-  };
+  const cartTotal = cartItems.reduce(
+    (sum, item) => sum + item.precio * (item.cantidad ?? item.quantity ?? 1),
+    0
+  );
+
+  const handleConfirmPurchaseWithStock = async () => {
+    if (cartItems.length === 0) return;
+    try {
+      const token = localStorage.getItem('token');
+      const headers = {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` })
+    };
+
+    await Promise.all(
+      cartItems.map((item) => {
+        const cantidad = item.cantidad ?? item.quantity ?? 1;
+
+        return fetch(`http://localhost:8080/api/productos/${item.id}/stock`, {
+          method: 'PATCH',
+          headers,
+          credentials: 'include',
+          mode: 'cors',
+          body: JSON.stringify({ cantidad })
+        }).then(async (res) => {
+          if (!res.ok) {
+            const body = await res.text().catch(() => 'no body');
+            throw new Error(`Error actualizando stock de producto ${item.id}: ${body}`);
+          }
+        });
+      })
+    );
+    await dispatch(vaciarCarritoDB(usuarioId));
+    alert('Compra finalizada y stock actualizado');
+  } catch (err) {
+    console.error(err);
+    alert('Error al actualizar stock: ' + (err.message || err));
+  }
+};
 
   return (
     <div style={{ padding: '2rem', width: '100%' }}>
@@ -31,9 +70,11 @@ const Checkout = () => {
                 }}
               >
                 <span>
-                  {item.nombre} x {item.quantity}
+                  {item.nombre} x {item.cantidad ?? item.quantity ?? 1}
                 </span>
-                <strong>${formatPrice(item.precio * item.quantity)}</strong>
+                <strong>
+                  ${formatPrice(item.precio * (item.cantidad ?? item.quantity ?? 1))}
+                </strong>
               </div>
             ))}
             <div
@@ -68,7 +109,7 @@ const Checkout = () => {
       </Link>
       <button
         disabled={cartItems.length === 0}
-        onClick={handleConfirmPurchase}
+        onClick={handleConfirmPurchaseWithStock}
         style={{
           backgroundColor: cartItems.length === 0 ? '#9ca3af' : '#4CAF50',
           color: 'white',

@@ -3,6 +3,7 @@ import './Login.css'
 import { Link, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { loginUser } from '../store/slices/userSlice'
+import { fetchCarrito } from '../store/slices/cartSlice'
 
 function Login() {
   const [email, setEmail] = useState('')
@@ -17,6 +18,10 @@ function Login() {
     try {
       // El slice se encarga del POST, guardar token y guardar datos del usuario.
       const data = await dispatch(loginUser({ email, password })).unwrap()
+      if (data?.usuario?.id || data?.id){
+        const usuarioId = data?.usuario?.id || data?.id
+        dispatch(fetchCarrito(usuarioId))
+      }
       alert('Login exitoso')
       navigate(data.token ? '/perfil' : '/')
     } catch (err) {
