@@ -46,7 +46,11 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/api/usuarios/registro", "/api/usuarios/login").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/productos").permitAll() // nuevo
+                    .requestMatchers(HttpMethod.GET, "/api/productos/{id}").permitAll() // nuevo
+                    .requestMatchers(HttpMethod.PATCH, "/api/productos/{id}/stock").permitAll() // nuevo
                     .requestMatchers("/api/carrito/**").permitAll()
+                    .requestMatchers("/api/categorias/**").permitAll()
+                    .requestMatchers("/api/productos/actualizar-stock").permitAll()
                     .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())
@@ -77,9 +81,10 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of("http://localhost:5173"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE","PATCH" ,"OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
+
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

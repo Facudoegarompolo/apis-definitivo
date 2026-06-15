@@ -66,6 +66,22 @@ public class ProductoService {
         return toResponse(guardado);
     }
 
+    public ProductoResponse actualizarProducto(Long id, ProductoRequest req) {
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new ProductoNotFoundException(id));
+
+        producto.setNombre(req.getNombre());
+        producto.setDescripcion(req.getDescripcion());
+        producto.setPrecio(req.getPrecio());
+        producto.setStock(req.getStock());
+
+        List<Categoria> categorias = categoriaRepository.findAllById(req.getCategoriaIds());
+        producto.setCategorias(categorias);
+
+        Producto actualizado = productoRepository.save(producto);
+        return toResponse(actualizado);
+    }
+
     public void eliminarProducto(Long id) {
 
         Producto producto = productoRepository.findById(id)

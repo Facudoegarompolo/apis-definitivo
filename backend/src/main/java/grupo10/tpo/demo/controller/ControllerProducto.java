@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/productos")
@@ -53,6 +56,20 @@ public class ControllerProducto {
     public ResponseEntity<Void> eliminarProducto(@PathVariable Long id) {
         productoService.eliminarProducto(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}")
+    public ProductoResponse actualizarProducto(@PathVariable Long id, @RequestBody ProductoRequest req) {
+        return productoService.actualizarProducto(id, req);
+    }
+
+    @PatchMapping("/{id}/stock")
+    public ProductoResponse descontarStock(@PathVariable Long id, @RequestBody Map<String, Integer> body) {
+        Integer cantidad = body.get("cantidad");
+        if (cantidad == null) {
+            throw new IllegalArgumentException("Campo 'cantidad' requerido");
+        }
+        return productoService.descontarStock(id, cantidad);
     }
 
 }
