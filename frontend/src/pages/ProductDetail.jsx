@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import defaultImage from '../assets/imgXdefault.jpg';
+import { addToCart } from '../store/slices/cartSlice';
 
 const ProductDetail = () => {
-  // const { addToCart } = useCart();
+  const dispatch = useDispatch();
   
   // useParams es un hook de React Router que extrae los parámetros de la URL.
   // En este caso, desestructura el objeto devuelto para obtener el 'id' del producto.
@@ -32,10 +34,7 @@ const ProductDetail = () => {
             'Accept': 'application/json',
             
             // Indica al servidor que estamos enviando datos en formato JSON
-            'Content-Type': 'application/json',
-            
-            // Envía el token JWT si existe en localStorage (necesario para rutas protegidas)
-            'Authorization': localStorage.getItem('token')
+            'Content-Type': 'application/json'
           },
           
           // Permite el envío de cookies y credenciales de autenticación
@@ -62,7 +61,7 @@ const ProductDetail = () => {
   }, [id]);
 
   const handleAddToCart = () => {
-    addToCart(product);
+    dispatch(addToCart(product));
 
     // Aquí se invoca la función 'navigate' para redirigir al usuario.
     // Después de agregar un producto al carrito, se le lleva a la página '/carrito'.

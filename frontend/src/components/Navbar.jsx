@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { logout } from '../store/slices/userSlice'
+import { logoutUser } from '../store/slices/userSlice'
 import './Navbar.css'
 
 export default function Navbar() {
@@ -11,7 +11,7 @@ export default function Navbar() {
   const userName = user?.nombre || user?.email || 'Usuario'
 
   const handleLogout = () => {
-    dispatch(logout())
+    dispatch(logoutUser())
     setOpen(false)
   }
 

@@ -15,8 +15,7 @@ function ProductList() {
           method: 'GET',
           headers: {
             'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('token')
+            'Content-Type': 'application/json'
           },
           credentials: 'include',
           mode: 'cors'

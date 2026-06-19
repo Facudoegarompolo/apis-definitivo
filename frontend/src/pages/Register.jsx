@@ -16,15 +16,14 @@ function Register() {
     e.preventDefault()
 
     try {
-      // El slice hace el POST y guarda token + datos del usuario en Redux.
-      const data = await dispatch(registerUser({
+      await dispatch(registerUser({
         nombre: name,
         email,
         password
       })).unwrap()
 
       alert('Te registraste correctamente')
-      navigate(data.token ? '/perfil' : '/login')
+      navigate('/perfil')
     } catch (err) {
       alert(err.message || err)
     }

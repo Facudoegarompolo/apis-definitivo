@@ -15,10 +15,9 @@ function Login() {
     e.preventDefault()
 
     try {
-      // El slice se encarga del POST, guardar token y guardar datos del usuario.
-      const data = await dispatch(loginUser({ email, password })).unwrap()
+      await dispatch(loginUser({ email, password })).unwrap()
       alert('Login exitoso')
-      navigate(data.token ? '/perfil' : '/')
+      navigate('/perfil')
     } catch (err) {
       alert(err.message || err)
     }

@@ -1,5 +1,6 @@
+import { useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
@@ -12,14 +13,25 @@ import Profile from './pages/Profile'
 import Favourites from './pages/Favourites'
 import Cart from './components/Cart'
 import Checkout from './components/Checkout'
+import { restoreSession } from './store/slices/userSlice'
 
 function ProtectedRoute({ children }) {
-  const isAuthenticated = useSelector((state) => state.user.isAuthenticated)
+  const { isAuthenticated, sessionChecked } = useSelector((state) => state.user)
+
+  if (!sessionChecked) {
+    return <div>Cargando sesión...</div>
+  }
 
   return isAuthenticated ? children : <Navigate to="/login" replace />
 }
   
 function App() {
+  const dispatch = useDispatch()
+
+  useEffect(() => {
+    dispatch(restoreSession())
+  }, [dispatch])
+
   return (
     <>
       <Navbar />

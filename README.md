@@ -29,11 +29,10 @@ El frontend corre en `http://localhost:5173`.
 
 ## Auth
 
-El login y registro devuelven:
+El login y registro devuelven los datos publicos del usuario:
 
 ```json
 {
-  "token": "jwt",
   "usuario": {
     "id": 1,
     "nombre": "Usuario",
@@ -42,4 +41,10 @@ El login y registro devuelven:
 }
 ```
 
-Redux guarda solo `id`, `nombre`, `email` y `token`. La password no se guarda.
+El JWT se envia en una cookie `access_token` con `HttpOnly`, por lo que React no
+puede leerlo. Redux conserva `id`, `nombre` y `email` solo en memoria, y restaura
+la sesion al recargar mediante `GET /api/usuarios/me`.
+
+Las operaciones que modifican datos usan ademas el token de `GET
+/api/usuarios/csrf`. La cookie `XSRF-TOKEN` no contiene credenciales; el JWT
+permanece aislado en la cookie `HttpOnly`.

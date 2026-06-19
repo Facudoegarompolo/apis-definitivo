@@ -59,6 +59,12 @@ public class UsuarioService {
         return toResponse(usuario);
     }
 
+    public UsuarioResponse getUserByEmail(String email) {
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new UsuarioNotFoundException("Usuario no encontrado"));
+        return toResponse(usuario);
+    }
+
     public AuthResponse registrarUsuario(UsuarioRegistroRequest request) {
         if (usuarioRepository.existsByEmail(request.getEmail())) {
             throw new RecursosDuplicadosException("Ya existe un usuario con ese email");

@@ -1,6 +1,8 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
 const API_URL = 'http://localhost:8080/api/usuarios';
+let csrfToken = null;
+let csrfHeaderName = 'X-XSRF-TOKEN';
 
 const getSafeUser = (userData) => {
   if (!userData) {
@@ -14,39 +16,12 @@ const getSafeUser = (userData) => {
   };
 };
 
-// Lee datos guardados para que la sesion siga activa al recargar la pagina.
-const savedToken = localStorage.getItem('token');
-const getSavedUser = () => {
-  try {
-    return getSafeUser(JSON.parse(localStorage.getItem('user') || 'null'));
-  } catch {
-    return null;
-  }
-};
-
-const savedUser = getSavedUser();
-
 const initialState = {
-  user: savedUser,
-  token: savedToken,
-  isAuthenticated: Boolean(savedToken),
+  user: null,
+  isAuthenticated: false,
+  sessionChecked: false,
   loading: false,
   error: null
-};
-
-const saveSession = ({ token, usuario }) => {
-  if (token) {
-    localStorage.setItem('token', token);
-  }
-
-  if (usuario) {
-    localStorage.setItem('user', JSON.stringify(getSafeUser(usuario)));
-  }
-};
-
-const clearSession = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
 };
 
 const getErrorMessage = async (response, defaultMessage) => {
@@ -54,28 +29,48 @@ const getErrorMessage = async (response, defaultMessage) => {
   return text || defaultMessage;
 };
 
-const removePassword = (userData) => {
-  const safeUserData = { ...userData };
-  delete safeUserData.password;
-  return safeUserData;
+const getAuthUser = (payload) => getSafeUser(payload?.usuario || payload?.user || payload);
+
+const loadCsrfToken = async () => {
+  const response = await fetch(`${API_URL}/csrf`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+      'Accept': 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error('No se pudo inicializar la proteccion CSRF');
+  }
+
+  const data = await response.json();
+  csrfToken = data.token;
+  csrfHeaderName = data.headerName;
 };
 
-const getAuthData = (payload, fallbackUser) => {
-  const usuario = payload?.usuario || payload?.user || payload || fallbackUser;
+const fetchWithCsrf = async (url, options = {}) => {
+  if (!csrfToken) {
+    await loadCsrfToken();
+  }
 
-  return {
-    token: payload?.token || null,
-    usuario: getSafeUser(usuario)
-  };
+  const headers = new Headers(options.headers);
+  headers.set(csrfHeaderName, csrfToken);
+
+  return fetch(url, {
+    ...options,
+    credentials: 'include',
+    headers
+  });
 };
 
-// POST /api/usuarios/login
-// Autentica al usuario y devuelve { token, usuario } desde el backend.
+// La cookie HttpOnly se guarda desde Set-Cookie y se envia con credentials: include.
 export const loginUser = createAsyncThunk(
   'user/loginUser',
   async ({ email, password }, { rejectWithValue }) => {
     const response = await fetch(`${API_URL}/login`, {
       method: 'POST',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json'
       },
@@ -90,13 +85,12 @@ export const loginUser = createAsyncThunk(
   }
 );
 
-// POST /api/usuarios/registro
-// Crea el usuario. El backend actual tambien devuelve token y usuario.
 export const registerUser = createAsyncThunk(
   'user/registerUser',
   async (userData, { rejectWithValue }) => {
     const response = await fetch(`${API_URL}/registro`, {
       method: 'POST',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json'
       },
@@ -111,18 +105,59 @@ export const registerUser = createAsyncThunk(
   }
 );
 
-// GET /api/usuarios/:id
-// Obtiene los datos actualizados del usuario autenticado.
+// Al recargar la pagina, el backend valida la cookie y devuelve el usuario actual.
+export const restoreSession = createAsyncThunk(
+  'user/restoreSession',
+  async (_, { rejectWithValue }) => {
+    try {
+      await loadCsrfToken();
+    } catch {
+      return rejectWithValue(null);
+    }
+
+    const response = await fetch(`${API_URL}/me`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+
+    if (!response.ok) {
+      return rejectWithValue(null);
+    }
+
+    return response.json();
+  }
+);
+
+export const logoutUser = createAsyncThunk(
+  'user/logoutUser',
+  async (_, { rejectWithValue }) => {
+    let response;
+
+    try {
+      response = await fetchWithCsrf(`${API_URL}/logout`, {
+        method: 'POST'
+      });
+    } catch {
+      return rejectWithValue('No se pudo inicializar la proteccion CSRF');
+    }
+
+    if (!response.ok) {
+      return rejectWithValue(await getErrorMessage(response, 'No se pudo cerrar la sesion'));
+    }
+  }
+);
+
 export const getUserProfile = createAsyncThunk(
   'user/getUserProfile',
-  async (userId, { getState, rejectWithValue }) => {
-    const { token } = getState().user;
-
+  async (userId, { rejectWithValue }) => {
     const response = await fetch(`${API_URL}/${userId}`, {
       method: 'GET',
+      credentials: 'include',
       headers: {
-        'Accept': 'application/json',
-        'Authorization': token ? `Bearer ${token}` : ''
+        'Accept': 'application/json'
       }
     });
 
@@ -134,21 +169,22 @@ export const getUserProfile = createAsyncThunk(
   }
 );
 
-// PUT /api/usuarios/:id
-// Queda preparado para cuando el backend habilite editar el perfil.
 export const updateUserProfile = createAsyncThunk(
   'user/updateUserProfile',
-  async ({ id, userData }, { getState, rejectWithValue }) => {
-    const { token } = getState().user;
+  async ({ id, userData }, { rejectWithValue }) => {
+    let response;
 
-    const response = await fetch(`${API_URL}/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': token ? `Bearer ${token}` : ''
-      },
-      body: JSON.stringify(userData)
-    });
+    try {
+      response = await fetchWithCsrf(`${API_URL}/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(userData)
+      });
+    } catch {
+      return rejectWithValue('No se pudo inicializar la proteccion CSRF');
+    }
 
     if (!response.ok) {
       return rejectWithValue(await getErrorMessage(response, 'No se pudo actualizar el perfil'));
@@ -158,19 +194,18 @@ export const updateUserProfile = createAsyncThunk(
   }
 );
 
-// DELETE /api/usuarios/:id
-// Elimina el usuario y limpia la sesion local.
 export const deleteUserProfile = createAsyncThunk(
   'user/deleteUserProfile',
-  async (userId, { getState, rejectWithValue }) => {
-    const { token } = getState().user;
+  async (userId, { rejectWithValue }) => {
+    let response;
 
-    const response = await fetch(`${API_URL}/${userId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : ''
-      }
-    });
+    try {
+      response = await fetchWithCsrf(`${API_URL}/${userId}`, {
+        method: 'DELETE'
+      });
+    } catch {
+      return rejectWithValue('No se pudo inicializar la proteccion CSRF');
+    }
 
     if (!response.ok) {
       return rejectWithValue(await getErrorMessage(response, 'No se pudo eliminar el usuario'));
@@ -180,24 +215,20 @@ export const deleteUserProfile = createAsyncThunk(
   }
 );
 
+const clearSession = (state) => {
+  state.user = null;
+  state.isAuthenticated = false;
+};
+
 const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    logout: (state) => {
-      state.user = null;
-      state.token = null;
-      state.isAuthenticated = false;
-      state.error = null;
-      clearSession();
-    },
     updateLocalUser: (state, action) => {
-      // Actualiza datos simples del usuario sin llamar al backend.
       state.user = getSafeUser({
         ...state.user,
         ...action.payload
       });
-      localStorage.setItem('user', JSON.stringify(state.user));
     }
   },
   extraReducers: (builder) => {
@@ -207,13 +238,10 @@ const userSlice = createSlice({
         state.error = null;
       })
       .addCase(loginUser.fulfilled, (state, action) => {
-        const { token, usuario } = getAuthData(action.payload, removePassword(action.meta.arg));
-
         state.loading = false;
-        state.token = token;
-        state.user = usuario;
-        state.isAuthenticated = Boolean(token);
-        saveSession({ token, usuario });
+        state.user = getAuthUser(action.payload);
+        state.isAuthenticated = Boolean(state.user);
+        state.sessionChecked = true;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
@@ -224,35 +252,51 @@ const userSlice = createSlice({
         state.error = null;
       })
       .addCase(registerUser.fulfilled, (state, action) => {
-        const { token, usuario } = getAuthData(action.payload, removePassword(action.meta.arg));
-
         state.loading = false;
-        state.token = token;
-        state.user = usuario;
-        state.isAuthenticated = Boolean(token);
-        saveSession({ token, usuario });
+        state.user = getAuthUser(action.payload);
+        state.isAuthenticated = Boolean(state.user);
+        state.sessionChecked = true;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || 'No se pudo registrar el usuario';
       })
+      .addCase(restoreSession.pending, (state) => {
+        state.sessionChecked = false;
+      })
+      .addCase(restoreSession.fulfilled, (state, action) => {
+        state.user = getSafeUser(action.payload);
+        state.isAuthenticated = Boolean(state.user);
+        state.sessionChecked = true;
+      })
+      .addCase(restoreSession.rejected, (state) => {
+        clearSession(state);
+        state.sessionChecked = true;
+      })
+      .addCase(logoutUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(logoutUser.fulfilled, (state) => {
+        clearSession(state);
+        state.loading = false;
+      })
+      .addCase(logoutUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || 'No se pudo cerrar la sesion';
+      })
       .addCase(getUserProfile.fulfilled, (state, action) => {
         state.user = getSafeUser(action.payload);
-        localStorage.setItem('user', JSON.stringify(state.user));
       })
       .addCase(updateUserProfile.fulfilled, (state, action) => {
         state.user = getSafeUser(action.payload);
-        localStorage.setItem('user', JSON.stringify(state.user));
       })
       .addCase(deleteUserProfile.fulfilled, (state) => {
-        state.user = null;
-        state.token = null;
-        state.isAuthenticated = false;
-        clearSession();
+        clearSession(state);
       });
   }
 });
 
-export const { logout, updateLocalUser } = userSlice.actions;
+export const { updateLocalUser } = userSlice.actions;
 
 export default userSlice.reducer;

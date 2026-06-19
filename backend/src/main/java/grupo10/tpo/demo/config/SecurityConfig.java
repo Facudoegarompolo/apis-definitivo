@@ -15,6 +15,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.session.NullAuthenticatedSessionStrategy;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -39,12 +42,25 @@ public class SecurityConfig {
 public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http
             .cors(cors -> cors.configurationSource(corsConfigurationSource())) // nuevo
-            .csrf(csrf -> csrf.disable())
+            .csrf(csrf -> csrf
+                    .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                    .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
+                    .sessionAuthenticationStrategy(new NullAuthenticatedSessionStrategy())
+                    .ignoringRequestMatchers(
+                            "/api/usuarios/registro",
+                            "/api/usuarios/login"
+                    )
+            )
             .sessionManagement(session ->
                     session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/api/usuarios/registro", "/api/usuarios/login").permitAll()
+                    .requestMatchers(
+                            "/api/usuarios/registro",
+                            "/api/usuarios/login",
+                            "/api/usuarios/logout",
+                            "/api/usuarios/csrf"
+                    ).permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/productos").permitAll() // nuevo
                     .requestMatchers("/api/carrito/**").permitAll()
                     .anyRequest().authenticated()

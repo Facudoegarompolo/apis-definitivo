@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/carrito")
-@CrossOrigin(origins = "http://localhost:5173")
 public class ControllerCarrito {
 
     private final CarritoService carritoService;
