@@ -8,6 +8,7 @@ import grupo10.tpo.demo.exception.usuario.UsuarioNotFoundException;
 import grupo10.tpo.demo.model.Usuario;
 import grupo10.tpo.demo.model.enums.Rol;
 import grupo10.tpo.demo.repository.UsuarioRepository;
+import grupo10.tpo.demo.repository.FavoritoRepository;
 import grupo10.tpo.demo.security.JwtService;
 import grupo10.tpo.demo.security.LoginRequest;
 import jakarta.transaction.Transactional;
@@ -27,15 +28,18 @@ public class UsuarioService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final FavoritoRepository favoritoRepository;
 
     public UsuarioService(UsuarioRepository usuarioRepository,
                           PasswordEncoder passwordEncoder,
                           JwtService jwtService,
-                          AuthenticationManager authenticationManager) {
+                          AuthenticationManager authenticationManager,
+                          FavoritoRepository favoritoRepository) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
+        this.favoritoRepository = favoritoRepository;
     }
 
     private UsuarioResponse toResponse(Usuario usuario) {
@@ -103,6 +107,7 @@ public class UsuarioService {
         if (!usuarioRepository.existsById(id)) {
             throw new UsuarioNotFoundException("Usuario no encontrado");
         }
+        favoritoRepository.deleteAllByUsuario_Id(id);
         usuarioRepository.deleteById(id);
     }
 }

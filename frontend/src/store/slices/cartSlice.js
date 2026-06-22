@@ -1,47 +1,69 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-// cartSlice cumple la función del CartProvider en useContext
+const hasSameId = (item, productId) => String(item.id) === String(productId);
+
 const cartSlice = createSlice({
   name: 'cart',
   initialState: {
-    // listado de productos en el carrito
-    items: [],
-    total: 0
+    items: []
   },
-  // agrupa todas las funciones que modifican el estado del carrito
   reducers: {
-    // función para agregar un producto al carrito
-    // state = { items: [] } (el estado actual del carrito)
-    // action es un objeto que contiene la acción y el dato enviado (payload)
-    // action = {
-    //   type: 'cart/addToCart', // Tipo de acción (generado automáticamente)
-    //   payload: { id: 1, nombre: 'Producto A', precio: 100 } // El producto que enviaste
-    // }
     addToCart: (state, action) => {
       const product = action.payload;
-      // find busca en items si ya existe un producto con el mismo id. 
-      const existingItem = state.items.find(item => item.id === product.id);
-      
-      if (!existingItem) {
-        // si no encuentra el producto en el array items
-        // agrega dicho producto al array items del carrito
-        state.items.push(product);
-      }
+      const existingItem = state.items.find((item) => hasSameId(item, product.id));
 
-      //TODO: ssanchez - si no existe, incrementar la cantidad del producto
+      if (existingItem) {
+        existingItem.quantity = (existingItem.quantity ?? 1) + 1;
+      } else {
+        state.items.push({ ...product, quantity: 1 });
+      }
+    },
+
+    increaseQuantity: (state, action) => {
+      const item = state.items.find((cartItem) => hasSameId(cartItem, action.payload));
+      if (item) item.quantity = (item.quantity ?? 1) + 1;
+    },
+
+    decreaseQuantity: (state, action) => {
+      const item = state.items.find((cartItem) => hasSameId(cartItem, action.payload));
+      if (!item) return;
+
+      const quantity = item.quantity ?? 1;
+
+      if (quantity === 1) {
+        state.items = state.items.filter((cartItem) => !hasSameId(cartItem, action.payload));
+      } else {
+        item.quantity = quantity - 1;
+      }
     },
 
     removeFromCart: (state, action) => {
-      // filter crea un nuevo array sin el producto que queremos eliminar
-      state.items = state.items.filter(item => item.id !== action.payload);
+      state.items = state.items.filter((item) => !hasSameId(item, action.payload));
     },
-    
+
     clearCart: (state) => {
       state.items = [];
     }
   }
 });
 
-export const { addToCart, removeFromCart, clearCart } = cartSlice.actions;
+export const selectCartItems = (state) => state.cart.items;
+
+export const selectCartCount = (state) =>
+  selectCartItems(state).reduce((count, item) => count + (item.quantity ?? 1), 0);
+
+export const selectCartTotal = (state) =>
+  selectCartItems(state).reduce(
+    (total, item) => total + Number(item.precio ?? item.price ?? 0) * (item.quantity ?? 1),
+    0
+  );
+
+export const {
+  addToCart,
+  increaseQuantity,
+  decreaseQuantity,
+  removeFromCart,
+  clearCart
+} = cartSlice.actions;
 
 export default cartSlice.reducer;

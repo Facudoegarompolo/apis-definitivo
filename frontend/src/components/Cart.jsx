@@ -1,19 +1,24 @@
 import { Link } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import defaultImage from '../assets/imgXdefault.jpg';
+import {
+  clearCart,
+  decreaseQuantity,
+  increaseQuantity,
+  removeFromCart,
+  selectCartCount,
+  selectCartItems,
+  selectCartTotal
+} from '../store/slices/cartSlice';
 import './Cart.css';
 
 const formatPrice = (value) => Number(value ?? 0).toLocaleString('es-AR');
 
 const Cart = () => {
-  const {
-    cartItems,
-    cartCount,
-    cartTotal,
-    decreaseQuantity,
-    increaseQuantity,
-    removeFromCart,
-    clearCart,
-  } = useCart();
+  const dispatch = useDispatch();
+  const cartItems = useSelector(selectCartItems);
+  const cartCount = useSelector(selectCartCount);
+  const cartTotal = useSelector(selectCartTotal);
 
   return (
     <section className="cart-page">
@@ -52,28 +57,28 @@ const Cart = () => {
                       <button
                         type="button"
                         className="quantity-controls__button"
-                        onClick={() => decreaseQuantity(item.id)}
+                        onClick={() => dispatch(decreaseQuantity(item.id))}
                       >
                         -
                       </button>
-                      <span className="quantity-controls__value">{item.quantity}</span>
+                      <span className="quantity-controls__value">{item.quantity ?? 1}</span>
                       <button
                         type="button"
                         className="quantity-controls__button"
-                        onClick={() => increaseQuantity(item.id)}
+                        onClick={() => dispatch(increaseQuantity(item.id))}
                       >
                         +
                       </button>
                     </div>
                   </div>
                   <p className="cart-item__total">
-                    Total: <strong>${formatPrice(item.precio * item.quantity)}</strong>
+                    Total: <strong>${formatPrice(item.precio * (item.quantity ?? 1))}</strong>
                   </p>
                 </div>
                 <button
                   type="button"
                   className="cart-item__remove"
-                  onClick={() => removeFromCart(item.id)}
+                  onClick={() => dispatch(removeFromCart(item.id))}
                 >
                   Eliminar
                 </button>
@@ -87,7 +92,11 @@ const Cart = () => {
               <p className="cart-summary__amount">${formatPrice(cartTotal)}</p>
             </div>
             <div className="cart-summary__actions">
-              <button type="button" className="cart-button cart-button--secondary" onClick={clearCart}>
+              <button
+                type="button"
+                className="cart-button cart-button--secondary"
+                onClick={() => dispatch(clearCart())}
+              >
                 Vaciar carrito
               </button>
               <Link className="cart-button cart-button--primary" to="/checkout">

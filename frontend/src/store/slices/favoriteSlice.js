@@ -1,39 +1,137 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
+import { fetchWithCsrf } from '../../services/csrfClient'
+
+const API_URL = 'http://localhost:8080/api/favoritos'
+
+async function getErrorMessage(response, defaultMessage) {
+  const message = await response.text()
+  return message || defaultMessage
+}
+
+export const loadFavorites = createAsyncThunk(
+  'favorite/loadFavorites',
+  async (_, { rejectWithValue }) => {
+    const response = await fetch(API_URL, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      return rejectWithValue(await getErrorMessage(response, 'No se pudieron cargar los favoritos'))
+    }
+
+    return response.json()
+  },
+)
+
+export const addFavorite = createAsyncThunk(
+  'favorite/addFavorite',
+  async (productId, { rejectWithValue }) => {
+    try {
+      const response = await fetchWithCsrf(`${API_URL}/${productId}`, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        return rejectWithValue(await getErrorMessage(response, 'No se pudo agregar el favorito'))
+      }
+
+      return response.json()
+    } catch (error) {
+      return rejectWithValue(error.message)
+    }
+  },
+)
+
+export const removeFavorite = createAsyncThunk(
+  'favorite/removeFavorite',
+  async (productId, { rejectWithValue }) => {
+    try {
+      const response = await fetchWithCsrf(`${API_URL}/${productId}`, {
+        method: 'DELETE',
+        headers: {
+          Accept: 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        return rejectWithValue(await getErrorMessage(response, 'No se pudo eliminar el favorito'))
+      }
+
+      return response.json()
+    } catch (error) {
+      return rejectWithValue(error.message)
+    }
+  },
+)
+
+const initialState = {
+  items: [],
+  loading: false,
+  savingProductIds: [],
+  error: null,
+}
+
+function markSaving(state, action) {
+  const productId = String(action.meta.arg)
+  if (!state.savingProductIds.includes(productId)) {
+    state.savingProductIds.push(productId)
+  }
+  state.error = null
+}
+
+function finishSaving(state, action) {
+  const productId = String(action.meta.arg)
+  state.savingProductIds = state.savingProductIds.filter((id) => id !== productId)
+}
 
 const favoriteSlice = createSlice({
   name: 'favorite',
-  initialState: {
-    // array de objetos de productos: id, nombre, precio, 
-    items: []
-  },
-
+  initialState,
   reducers: {
-    // action = {
-    //   type: 'favorite/addFavorite', // Tipo de acción (generado automáticamente)
-    //   payload: { id: 1, nombre: 'Producto A', precio: 100 } // El producto que enviaste
-    // }
-    // en el componeten dispatch(addFavorite(producto
+    resetFavorites: () => initialState,
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(loadFavorites.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(loadFavorites.fulfilled, (state, action) => {
+        state.items = action.payload
+        state.loading = false
+      })
+      .addCase(loadFavorites.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload || 'No se pudieron cargar los favoritos'
+      })
+      .addCase(addFavorite.pending, markSaving)
+      .addCase(addFavorite.fulfilled, (state, action) => {
+        state.items = action.payload
+        finishSaving(state, action)
+      })
+      .addCase(addFavorite.rejected, (state, action) => {
+        finishSaving(state, action)
+        state.error = action.payload || 'No se pudo agregar el favorito'
+      })
+      .addCase(removeFavorite.pending, markSaving)
+      .addCase(removeFavorite.fulfilled, (state, action) => {
+        state.items = action.payload
+        finishSaving(state, action)
+      })
+      .addCase(removeFavorite.rejected, (state, action) => {
+        finishSaving(state, action)
+        state.error = action.payload || 'No se pudo eliminar el favorito'
+      })
+  },
+})
 
-    addFavorite: (state, action) => {
-      const product = action.payload;
-      const existingItem = state.items.find(item => item.id === product.id);
-      
-      if (!existingItem) {
-        state.items.push(product);
-      }
-    },
-    
-    removeFavorite: (state, action) => {
-      state.items = state.items.filter(item => item.id !== action.payload);
-    },
+export const { resetFavorites } = favoriteSlice.actions
 
-    clearFavorites: (state) => {
-      state.items = [];
-    }
-
-  }
-});
-
-export const { addFavorite, removeFavorite, clearFavorites } = favoriteSlice.actions;
-
-export default favoriteSlice.reducer;
+export default favoriteSlice.reducer

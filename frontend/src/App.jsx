@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 
 import Navbar from './components/Navbar'
@@ -13,7 +13,9 @@ import Profile from './pages/Profile'
 import Favourites from './pages/Favourites'
 import Cart from './components/Cart'
 import Checkout from './components/Checkout'
+import RouteErrorBoundary from './components/RouteErrorBoundary'
 import { restoreSession } from './store/slices/userSlice'
+import { loadFavorites, resetFavorites } from './store/slices/favoriteSlice'
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, sessionChecked } = useSelector((state) => state.user)
@@ -27,16 +29,29 @@ function ProtectedRoute({ children }) {
   
 function App() {
   const dispatch = useDispatch()
+  const location = useLocation()
+  const { isAuthenticated, sessionChecked } = useSelector((state) => state.user)
 
   useEffect(() => {
     dispatch(restoreSession())
   }, [dispatch])
 
+  useEffect(() => {
+    if (!sessionChecked) return
+
+    if (isAuthenticated) {
+      dispatch(loadFavorites())
+    } else {
+      dispatch(resetFavorites())
+    }
+  }, [dispatch, isAuthenticated, sessionChecked])
+
   return (
     <>
       <Navbar />
       <main>
-        <Routes>
+        <RouteErrorBoundary key={location.pathname}>
+          <Routes>
           <Route path="/" element={<Home />} />
 
           <Route path="/productos" element={<ProductList />} />
@@ -82,7 +97,8 @@ function App() {
               </ProtectedRoute>
             }
           />
-        </Routes>
+          </Routes>
+        </RouteErrorBoundary>
       </main>
 
       <Footer />

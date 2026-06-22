@@ -1,24 +1,24 @@
 package grupo10.tpo.demo.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import grupo10.tpo.demo.service.CategoriaService;
 import grupo10.tpo.demo.dto.categoria.CategoriaRequest;
 import grupo10.tpo.demo.dto.categoria.CategoriaResponse;
-import grupo10.tpo.demo.model.Categoria;  
-
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/categorias")
 public class ControllerCategoria {
 
-    @Autowired
-    private CategoriaService categoriaService;
+    private final CategoriaService categoriaService;
+
+    public ControllerCategoria(CategoriaService categoriaService) {
+        this.categoriaService = categoriaService;
+    }
 
     @GetMapping
-    public List<Categoria> getAllCategorias() {
+    public List<CategoriaResponse> getAllCategorias() {
         return categoriaService.getAllCategorias();
     }
 

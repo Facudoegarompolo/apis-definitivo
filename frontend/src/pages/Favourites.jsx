@@ -5,11 +5,15 @@ import defaultImage from '../assets/imgXdefault.jpg'
 import '../components/Cart.css'
 
 function Favourites() {
-  const favItems = useSelector((state) => state.favorite.items || [])
+  const { items: favItems, loading, error, savingProductIds } = useSelector((state) => state.favorite)
   const dispatch = useDispatch()
 
   const handleRemoveFavorite = (productId) => {
     dispatch(removeFavorite(productId))
+  }
+
+  if (loading) {
+    return <div className="cart-page__empty">Cargando favoritos...</div>
   }
 
   return (
@@ -22,6 +26,8 @@ function Favourites() {
             : `Tienes ${favItems.length} ${favItems.length === 1 ? 'producto favorito' : 'productos favoritos'}`}
         </p>
       </div>
+
+      {error && <p className="text-danger" role="alert">{error}</p>}
 
       {favItems.length === 0 ? (
         <div className="cart-page__empty">
@@ -51,6 +57,7 @@ function Favourites() {
                 <button
                   type="button"
                   className="cart-item__remove"
+                  disabled={savingProductIds.includes(String(item.id))}
                   onClick={() => handleRemoveFavorite(item.id)}
                 >
                   Eliminar

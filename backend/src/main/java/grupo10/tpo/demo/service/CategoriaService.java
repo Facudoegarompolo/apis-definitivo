@@ -2,7 +2,6 @@ package grupo10.tpo.demo.service;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import grupo10.tpo.demo.dto.categoria.CategoriaDTOSimple;
@@ -17,11 +16,17 @@ import grupo10.tpo.demo.exception.categoria.CategoriaNotFoundException;
 @Service
 
 public class CategoriaService {
-    @Autowired
-    private CategoriaRepository categoriaRepository;
+    private final CategoriaRepository categoriaRepository;
 
-    public List<Categoria> getAllCategorias() {
-        return categoriaRepository.findAll();   
+    public CategoriaService(CategoriaRepository categoriaRepository) {
+        this.categoriaRepository = categoriaRepository;
+    }
+
+    public List<CategoriaResponse> getAllCategorias() {
+        return categoriaRepository.findAll()
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     public CategoriaResponse getCategoriaById(Long id) {

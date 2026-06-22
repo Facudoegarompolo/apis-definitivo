@@ -1,12 +1,20 @@
 import { Link } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  clearCart,
+  selectCartItems,
+  selectCartTotal
+} from '../store/slices/cartSlice';
 
 const formatPrice = (value) => Number(value ?? 0).toLocaleString('es-AR');
 
 const Checkout = () => {
-  const { cartItems, cartTotal, clearCart } = useCart();
+  const dispatch = useDispatch();
+  const cartItems = useSelector(selectCartItems);
+  const cartTotal = useSelector(selectCartTotal);
 
   const handleConfirmPurchase = () => {
-    clearCart();
+    dispatch(clearCart());
     alert('Compra finalizada');
   };
 
@@ -31,9 +39,9 @@ const Checkout = () => {
                 }}
               >
                 <span>
-                  {item.nombre} x {item.quantity}
+                  {item.nombre} x {item.quantity ?? 1}
                 </span>
-                <strong>${formatPrice(item.precio * item.quantity)}</strong>
+                <strong>${formatPrice(item.precio * (item.quantity ?? 1))}</strong>
               </div>
             ))}
             <div

@@ -12,6 +12,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
@@ -88,6 +89,22 @@ class JwtAuthenticationFilterTest {
         when(jwtCookieService.getToken(request)).thenReturn("invalid-jwt");
         when(jwtService.extractUsername("invalid-jwt"))
                 .thenThrow(new IllegalArgumentException("Invalid token"));
+
+        filter.doFilter(request, response, filterChain);
+
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    void ignoresJwtForAUserThatNoLongerExists() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        when(jwtCookieService.getToken(request)).thenReturn("signed-jwt");
+        when(jwtService.extractUsername("signed-jwt")).thenReturn("deleted@test.com");
+        when(userDetailsService.loadUserByUsername("deleted@test.com"))
+                .thenThrow(new UsernameNotFoundException("Usuario no encontrado"));
 
         filter.doFilter(request, response, filterChain);
 

@@ -2,17 +2,17 @@ package grupo10.tpo.demo.service;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import grupo10.tpo.demo.dto.categoria.CategoriaDTOSimple;
 import grupo10.tpo.demo.dto.producto.ProductoRequest;
 import grupo10.tpo.demo.dto.producto.ProductoResponse;
 import grupo10.tpo.demo.exception.producto.ProductoNotFoundException;
+import grupo10.tpo.demo.mapper.ProductoMapper;
 import grupo10.tpo.demo.model.Categoria;
 import grupo10.tpo.demo.model.Pedido;
 import grupo10.tpo.demo.model.Producto;
 import grupo10.tpo.demo.repository.CategoriaRepository;
+import grupo10.tpo.demo.repository.FavoritoRepository;
 import grupo10.tpo.demo.repository.ProductoRepository;
 import grupo10.tpo.demo.repository.PedidoRepository;
 
@@ -22,19 +22,28 @@ import jakarta.transaction.Transactional;
 @Transactional
 public class ProductoService {
 
-    @Autowired
-    private ProductoRepository productoRepository;
+    private final ProductoRepository productoRepository;
+    private final CategoriaRepository categoriaRepository;
+    private final PedidoRepository pedidoRepository;
+    private final FavoritoRepository favoritoRepository;
+    private final ProductoMapper productoMapper;
 
-    @Autowired
-    private CategoriaRepository categoriaRepository;
-
-    @Autowired
-    private PedidoRepository pedidoRepository; // 🔥 FALTABA ESTO
+    public ProductoService(ProductoRepository productoRepository,
+                           CategoriaRepository categoriaRepository,
+                           PedidoRepository pedidoRepository,
+                           FavoritoRepository favoritoRepository,
+                           ProductoMapper productoMapper) {
+        this.productoRepository = productoRepository;
+        this.categoriaRepository = categoriaRepository;
+        this.pedidoRepository = pedidoRepository;
+        this.favoritoRepository = favoritoRepository;
+        this.productoMapper = productoMapper;
+    }
 
     public List<ProductoResponse> getAllProductos() {
         return productoRepository.findAll()
                 .stream()
-                .map(this::toResponse)
+                .map(productoMapper::toResponse)
                 .toList();
     }
 
@@ -42,13 +51,13 @@ public class ProductoService {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new ProductoNotFoundException(id));
 
-        return toResponse(producto);
+        return productoMapper.toResponse(producto);
     }
 
     public List<ProductoResponse> getProductosByCategoriaId(Long categoriaId) {
         return productoRepository.findByCategorias_Id(categoriaId)
                 .stream()
-                .map(this::toResponse)
+                .map(productoMapper::toResponse)
                 .toList();
     }
 
@@ -63,7 +72,7 @@ public class ProductoService {
         producto.setCategorias(categorias);
 
         Producto guardado = productoRepository.save(producto);
-        return toResponse(guardado);
+        return productoMapper.toResponse(guardado);
     }
 
     public void eliminarProducto(Long id) {
@@ -82,6 +91,7 @@ public class ProductoService {
             pedido.getProductos().remove(producto);
         }
 
+        favoritoRepository.deleteAllByProducto_Id(id);
         productoRepository.delete(producto);
     }
 
@@ -96,24 +106,6 @@ public class ProductoService {
         producto.setStock(producto.getStock() - cantidad);
 
         Producto actualizado = productoRepository.save(producto);
-        return toResponse(actualizado);
-    }
-
-    private ProductoResponse toResponse(Producto producto) {
-        List<CategoriaDTOSimple> categorias = producto.getCategorias()
-                .stream()
-                .map(categoria -> new CategoriaDTOSimple(
-                        categoria.getId(),
-                        categoria.getNombre()))
-                .toList();
-
-        return new ProductoResponse(
-                producto.getId(),
-                producto.getNombre(),
-                producto.getPrecio(),
-                producto.getStock(),
-                producto.getDescripcion(),
-                categorias
-        );
+        return productoMapper.toResponse(actualizado);
     }
 }

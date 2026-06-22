@@ -1,8 +1,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { fetchWithCsrf, initializeCsrfToken } from '../../services/csrfClient';
 
 const API_URL = 'http://localhost:8080/api/usuarios';
-let csrfToken = null;
-let csrfHeaderName = 'X-XSRF-TOKEN';
 
 const getSafeUser = (userData) => {
   if (!userData) {
@@ -30,39 +29,6 @@ const getErrorMessage = async (response, defaultMessage) => {
 };
 
 const getAuthUser = (payload) => getSafeUser(payload?.usuario || payload?.user || payload);
-
-const loadCsrfToken = async () => {
-  const response = await fetch(`${API_URL}/csrf`, {
-    method: 'GET',
-    credentials: 'include',
-    headers: {
-      'Accept': 'application/json'
-    }
-  });
-
-  if (!response.ok) {
-    throw new Error('No se pudo inicializar la proteccion CSRF');
-  }
-
-  const data = await response.json();
-  csrfToken = data.token;
-  csrfHeaderName = data.headerName;
-};
-
-const fetchWithCsrf = async (url, options = {}) => {
-  if (!csrfToken) {
-    await loadCsrfToken();
-  }
-
-  const headers = new Headers(options.headers);
-  headers.set(csrfHeaderName, csrfToken);
-
-  return fetch(url, {
-    ...options,
-    credentials: 'include',
-    headers
-  });
-};
 
 // La cookie HttpOnly se guarda desde Set-Cookie y se envia con credentials: include.
 export const loginUser = createAsyncThunk(
@@ -110,7 +76,7 @@ export const restoreSession = createAsyncThunk(
   'user/restoreSession',
   async (_, { rejectWithValue }) => {
     try {
-      await loadCsrfToken();
+      await initializeCsrfToken();
     } catch {
       return rejectWithValue(null);
     }

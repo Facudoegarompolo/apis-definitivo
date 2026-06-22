@@ -61,7 +61,8 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
                             "/api/usuarios/logout",
                             "/api/usuarios/csrf"
                     ).permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/productos").permitAll() // nuevo
+                    .requestMatchers(HttpMethod.GET, "/api/productos/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/categorias/**").permitAll()
                     .requestMatchers("/api/carrito/**").permitAll()
                     .anyRequest().authenticated()
             )
