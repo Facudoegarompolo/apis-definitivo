@@ -1,6 +1,7 @@
 package grupo10.tpo.demo.controller;
 
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import grupo10.tpo.demo.service.CategoriaService;
 import grupo10.tpo.demo.dto.categoria.CategoriaRequest;
@@ -28,11 +29,13 @@ public class ControllerCategoria {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public CategoriaResponse crearCategoria(@RequestBody CategoriaRequest req) {
         return categoriaService.save(req);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public String eliminarCategoria(@PathVariable Long id) {
         categoriaService.eliminar(id);
         return "Categoria eliminada exitosamente";

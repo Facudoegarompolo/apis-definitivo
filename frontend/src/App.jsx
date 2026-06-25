@@ -11,6 +11,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Profile from './pages/Profile'
 import Favourites from './pages/Favourites'
+import AdminPanel from './pages/AdminPanel'
 import Cart from './components/Cart'
 import Checkout from './components/Checkout'
 import RouteErrorBoundary from './components/RouteErrorBoundary'
@@ -76,6 +77,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <Favourites />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <AdminPanel />
               </ProtectedRoute>
             }
           />

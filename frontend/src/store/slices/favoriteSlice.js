@@ -1,7 +1,8 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
+import { apiUrl } from '../../services/apiBase'
 import { fetchWithCsrf } from '../../services/csrfClient'
 
-const API_URL = 'http://localhost:8080/api/favoritos'
+const API_URL = apiUrl('/favoritos')
 
 async function getErrorMessage(response, defaultMessage) {
   const message = await response.text()

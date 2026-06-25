@@ -1,5 +1,6 @@
 package grupo10.tpo.demo.service;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -63,16 +64,31 @@ public class ProductoService {
 
     public ProductoResponse crearProductoConCategorias(ProductoRequest req) {
         Producto producto = new Producto();
+        aplicarDatosProducto(producto, req);
+
+        Producto guardado = productoRepository.save(producto);
+        return productoMapper.toResponse(guardado);
+    }
+
+    public ProductoResponse actualizarProducto(Long id, ProductoRequest req) {
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new ProductoNotFoundException(id));
+
+        aplicarDatosProducto(producto, req);
+
+        Producto actualizado = productoRepository.save(producto);
+        return productoMapper.toResponse(actualizado);
+    }
+
+    private void aplicarDatosProducto(Producto producto, ProductoRequest req) {
         producto.setNombre(req.getNombre());
         producto.setDescripcion(req.getDescripcion());
         producto.setPrecio(req.getPrecio());
         producto.setStock(req.getStock());
 
-        List<Categoria> categorias = categoriaRepository.findAllById(req.getCategoriaIds());
+        List<Long> categoriaIds = req.getCategoriaIds() != null ? req.getCategoriaIds() : Collections.emptyList();
+        List<Categoria> categorias = categoriaRepository.findAllById(categoriaIds);
         producto.setCategorias(categorias);
-
-        Producto guardado = productoRepository.save(producto);
-        return productoMapper.toResponse(guardado);
     }
 
     public void eliminarProducto(Long id) {

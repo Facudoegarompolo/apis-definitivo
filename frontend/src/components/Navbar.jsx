@@ -9,6 +9,7 @@ export default function Navbar() {
   const dispatch = useDispatch()
   const { user, isAuthenticated } = useSelector((state) => state.user)
   const userName = user?.nombre || user?.email || 'Usuario'
+  const isAdmin = user?.rol === 'ROLE_ADMIN'
 
   const handleLogout = () => {
     dispatch(logoutUser())
@@ -30,6 +31,7 @@ export default function Navbar() {
     { to: '/', label: 'Inicio' },
     { to: '/productos', label: 'Productos' },
     { to: '/ofertas', label: 'Ofertas' },
+    ...(isAdmin ? [{ to: '/admin', label: 'Admin' }] : []),
   ]
   
   return (

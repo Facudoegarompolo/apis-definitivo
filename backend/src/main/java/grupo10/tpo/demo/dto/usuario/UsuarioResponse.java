@@ -5,14 +5,20 @@ public class UsuarioResponse {
     private Long id;
     private String nombre;
     private String email;
+    private String rol;
 
     public UsuarioResponse() {
     }
 
     public UsuarioResponse(Long id, String nombre, String email) {
+        this(id, nombre, email, null);
+    }
+
+    public UsuarioResponse(Long id, String nombre, String email, String rol) {
         this.id = id;
         this.nombre = nombre;
         this.email = email;
+        this.rol = rol;
     }
 
     public Long getId() {
@@ -37,5 +43,13 @@ public class UsuarioResponse {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getRol() {
+        return rol;
+    }
+
+    public void setRol(String rol) {
+        this.rol = rol;
     }
 }

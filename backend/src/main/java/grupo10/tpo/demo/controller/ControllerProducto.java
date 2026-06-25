@@ -14,6 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.DeleteMapping;
 
@@ -44,8 +45,15 @@ public class ControllerProducto {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ProductoResponse crearProducto(@RequestBody ProductoRequest req) {
         return productoService.crearProductoConCategorias(req);
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ProductoResponse actualizarProducto(@PathVariable Long id, @RequestBody ProductoRequest req) {
+        return productoService.actualizarProducto(id, req);
     }
 
     @PreAuthorize("hasRole('ADMIN')")

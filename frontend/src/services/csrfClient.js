@@ -1,4 +1,6 @@
-const CSRF_URL = 'http://localhost:8080/api/usuarios/csrf'
+import { apiUrl } from './apiBase'
+
+const CSRF_URL = apiUrl('/usuarios/csrf')
 
 let csrfToken = null
 let csrfHeaderName = 'X-XSRF-TOKEN'

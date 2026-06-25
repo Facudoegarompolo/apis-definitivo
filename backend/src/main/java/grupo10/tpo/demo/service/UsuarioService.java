@@ -46,7 +46,8 @@ public class UsuarioService {
         return new UsuarioResponse(
                 usuario.getId(),
                 usuario.getNombre(),
-                usuario.getEmail()
+                usuario.getEmail(),
+                usuario.getRol().name()
         );
     }
 

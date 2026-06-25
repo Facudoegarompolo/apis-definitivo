@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import defaultImage from '../assets/imgXdefault.jpg';
 import { addToCart } from '../store/slices/cartSlice';
+import { apiUrl } from '../services/apiBase';
 
 const ProductDetail = () => {
   const dispatch = useDispatch();
@@ -25,7 +26,7 @@ const ProductDetail = () => {
       try {
         //http://localhost:8080/api/productos/{id}
         // const response = await fetch(`http://localhost:3000/productos/${id}`);
-        const response = await fetch(`http://localhost:8080/api/productos/${id}`, {
+        const response = await fetch(apiUrl(`/productos/${id}`), {
           // Especificamos el método HTTP a utilizar
           method: 'GET',
           

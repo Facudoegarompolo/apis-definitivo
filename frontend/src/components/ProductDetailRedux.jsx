@@ -4,6 +4,7 @@ import { useDispatch } from 'react-redux';
 import { addToCart } from '../store/slices/cartSlice';
 import { styles } from './ProductDetailRedux.styles';
 import defaultImage from '../assets/imgXdefault.jpg';
+import { apiUrl } from '../services/apiBase';
 
 const ProductDetailRedux = () => {
   // Hook para despachar acciones a Redux (agregar al carrito, eliminar del carrito, reset etc.)
@@ -19,7 +20,7 @@ const ProductDetailRedux = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const response = await fetch(`http://localhost:8080/api/productos/${id}`, {
+        const response = await fetch(apiUrl(`/productos/${id}`), {
           // Especificamos el método HTTP a utilizar
           method: 'GET',
           

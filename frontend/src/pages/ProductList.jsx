@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import CategoryFilter from '../components/CategoryFilter'
 import ProductCard from '../components/ProductCard'
+import { API_BASE_URL } from '../services/apiBase'
 import './ProductList.css'
 
-const API_URL = 'http://localhost:8080/api'
+const API_URL = API_BASE_URL
 
 function getSelectedCategoryIds(categories, selectedCategoryId) {
   if (selectedCategoryId === 'all') {

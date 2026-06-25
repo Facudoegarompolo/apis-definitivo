@@ -1,7 +1,8 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { apiUrl } from '../../services/apiBase';
 import { fetchWithCsrf, initializeCsrfToken } from '../../services/csrfClient';
 
-const API_URL = 'http://localhost:8080/api/usuarios';
+const API_URL = apiUrl('/usuarios');
 
 const getSafeUser = (userData) => {
   if (!userData) {
@@ -11,7 +12,8 @@ const getSafeUser = (userData) => {
   return {
     id: userData.id,
     nombre: userData.nombre,
-    email: userData.email
+    email: userData.email,
+    rol: userData.rol
   };
 };
 
