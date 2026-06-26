@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { clearCart, selectCartItems, selectCartTotal, vaciarCarritoDB } from '../store/slices/cartSlice'
+import { selectCartItems, selectCartTotal, vaciarCarritoDB } from '../store/slices/cartSlice'
 import { API_BASE_URL } from '../services/apiBase'
 import { fetchWithCsrf } from '../services/csrfClient'
 

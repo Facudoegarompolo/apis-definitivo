@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import CategoryFilter from '../components/CategoryFilter'
 import BrandFilter from '../components/BrandFilter'
 import ProductCard from '../components/ProductCard'
@@ -43,8 +43,11 @@ function ProductList({ showOffers = false }) {
   const [error, setError] = useState(null)
   const [sortOption, setSortOption] = useState('precio-menor')
   const [selectedCategoryId, setSelectedCategoryId] = useState('all')
-  const [selectedBrandId, setSelectedBrandId] = useState('all')
   const location = useLocation()
+  const navigate = useNavigate()
+  const query = new URLSearchParams(location.search)
+  const selectedBrandId = query.get('brand') ?? 'all'
+  const searchQuery = query.get('search')?.toString().trim().toLowerCase()
 
   useEffect(() => {
     const fetchCatalog = async () => {
@@ -80,13 +83,20 @@ function ProductList({ showOffers = false }) {
       }
     }
     fetchCatalog()
-  }, [])
+  }, [showOffers])
 
-  useEffect(() => {
-    const query = new URLSearchParams(location.search)
-    const brand = query.get('brand') ?? 'all'
-    setSelectedBrandId(brand)
-  }, [location.search])
+  const handleBrandSelect = (brandId) => {
+    const nextQuery = new URLSearchParams(location.search)
+
+    if (brandId === 'all') {
+      nextQuery.delete('brand')
+    } else {
+      nextQuery.set('brand', brandId)
+    }
+
+    const nextSearch = nextQuery.toString()
+    navigate(`${location.pathname}${nextSearch ? `?${nextSearch}` : ''}`)
+  }
 
   const visibleProducts = useMemo(() => {
     const getPrice = (product) => {
@@ -96,7 +106,6 @@ function ProductList({ showOffers = false }) {
     }
     const getTitle = (product) => (product.title ?? product.name ?? product.nombre ?? '').toString().toLowerCase()
     const selectedCategoryIds = getSelectedCategoryIds(categories, selectedCategoryId)
-    const searchQuery = new URLSearchParams(location.search).get('search')?.toString().trim().toLowerCase()
 
     const filteredByCategory = selectedCategoryIds
       ? products.filter((product) =>
@@ -127,7 +136,7 @@ function ProductList({ showOffers = false }) {
       }
       return 0
     })
-  }, [categories, products, selectedCategoryId, selectedBrandId, sortOption, location.search])
+  }, [categories, products, selectedCategoryId, selectedBrandId, sortOption, searchQuery])
 
   if (loading) return <div className="productos__status">Cargando productos...</div>
   if (error) return <div className="productos__status productos__status--error">Error: {error}</div>
@@ -172,7 +181,7 @@ function ProductList({ showOffers = false }) {
           <BrandFilter
             brands={brands}
             selectedBrandId={selectedBrandId}
-            onSelect={setSelectedBrandId}
+            onSelect={handleBrandSelect}
           />
 
         </aside>

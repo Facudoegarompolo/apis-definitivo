@@ -1,5 +1,20 @@
 import { useState } from 'react'
 
+function CategoryPill({ id, label, selectedCategoryId, onSelect }) {
+  const isSelected = selectedCategoryId === id
+
+  return (
+    <button
+      type="button"
+      className={`cat-pill ${isSelected ? 'cat-pill--active' : ''}`}
+      aria-pressed={isSelected}
+      onClick={() => onSelect(id)}
+    >
+      {label}
+    </button>
+  )
+}
+
 function CategoryFilter({ categories, selectedCategoryId, onSelect }) {
   const [drillParent, setDrillParent] = useState(null)
 
@@ -22,17 +37,6 @@ function CategoryFilter({ categories, selectedCategoryId, onSelect }) {
     onSelect(String(parent.id))
   }
 
-  const Pill = ({ id, label }) => (
-    <button
-      type="button"
-      className={`cat-pill ${selectedCategoryId === id ? 'cat-pill--active' : ''}`}
-      aria-pressed={selectedCategoryId === id}
-      onClick={() => onSelect(id)}
-    >
-      {label}
-    </button>
-  )
-
   return (
     <section aria-labelledby="category-filter-title" className="cat-filter">
       <h2 id="category-filter-title" className="filter__section-title">
@@ -41,7 +45,7 @@ function CategoryFilter({ categories, selectedCategoryId, onSelect }) {
 
       {drillParent === null ? (
         <>
-          <Pill id="all" label="Todas" />
+          <CategoryPill id="all" label="Todas" selectedCategoryId={selectedCategoryId} onSelect={onSelect} />
           {parents.map(parent => (
             <button
               key={parent.id}
@@ -59,9 +63,20 @@ function CategoryFilter({ categories, selectedCategoryId, onSelect }) {
           <button type="button" className="cat-back" onClick={handleBack}>
             ← {drillParent.nombre}
           </button>
-          <Pill id={String(drillParent.id)} label={`Todos los ${drillParent.nombre}`} />
+          <CategoryPill
+            id={String(drillParent.id)}
+            label={`Todos los ${drillParent.nombre}`}
+            selectedCategoryId={selectedCategoryId}
+            onSelect={onSelect}
+          />
           {childrenOf(drillParent.id).map(child => (
-            <Pill key={child.id} id={String(child.id)} label={child.nombre} />
+            <CategoryPill
+              key={child.id}
+              id={String(child.id)}
+              label={child.nombre}
+              selectedCategoryId={selectedCategoryId}
+              onSelect={onSelect}
+            />
           ))}
         </>
       )}

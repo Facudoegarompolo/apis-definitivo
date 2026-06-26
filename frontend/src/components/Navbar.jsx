@@ -6,13 +6,16 @@ import './Navbar.css'
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
-  const [searchValue, setSearchValue] = useState('')
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const location = useLocation()
   const { user, isAuthenticated } = useSelector((state) => state.user)
   const userName = user?.nombre || user?.email || 'Usuario'
   const isAdmin = user?.rol === 'ROLE_ADMIN'
+  const currentSearchValue = location.pathname === '/productos'
+    ? new URLSearchParams(location.search).get('search') || ''
+    : ''
+  const searchInputKey = `${location.pathname}${location.search}`
 
   const handleLogout = () => {
     dispatch(logout())
@@ -30,17 +33,11 @@ export default function Navbar() {
     return () => window.removeEventListener('resize', handleResize)
   }, [open])
 
-  useEffect(() => {
-    if (location.pathname !== '/productos') return
-
-    const params = new URLSearchParams(location.search)
-    setSearchValue(params.get('search') || '')
-  }, [location.pathname, location.search])
-
   const handleSearchSubmit = (event) => {
     event.preventDefault()
 
-    const trimmedSearch = searchValue.trim()
+    const formData = new FormData(event.currentTarget)
+    const trimmedSearch = String(formData.get('search') || '').trim()
     const targetPath = trimmedSearch
       ? `/productos?search=${encodeURIComponent(trimmedSearch)}`
       : '/productos'
@@ -80,12 +77,13 @@ export default function Navbar() {
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
           </svg>
           <input
+            key={searchInputKey}
             className="nav-search-input"
             type="search"
+            name="search"
             placeholder="Buscar productos..."
             aria-label="Buscar productos"
-            value={searchValue}
-            onChange={(event) => setSearchValue(event.target.value)}
+            defaultValue={currentSearchValue}
           />
         </form>
 
@@ -142,11 +140,12 @@ export default function Navbar() {
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
             </svg>
             <input
+              key={searchInputKey}
               type="search"
+              name="search"
               placeholder="Buscar productos..."
               aria-label="Buscar productos"
-              value={searchValue}
-              onChange={(event) => setSearchValue(event.target.value)}
+              defaultValue={currentSearchValue}
             />
           </form>
 

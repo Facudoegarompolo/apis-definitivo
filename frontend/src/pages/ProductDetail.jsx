@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import defaultImage from '../assets/imgXdefault.jpg';
 import { agregarItemCarrito } from '../store/slices/cartSlice';
-import { useSelector } from 'react-redux';
 import { apiUrl } from '../services/apiBase';
 
 const ProductDetail = () => {
@@ -14,7 +13,6 @@ const ProductDetail = () => {
   // Por ejemplo, si la URL es /products/123, useParams devolverá { id: '123' }.
   const { id } = useParams();
 
-  const user = useSelector((state) => state.user.user);
   // useNavigate es un hook que proporciona una función para navegar programáticamente.
   // La función 'navigate' se puede usar para redirigir al usuario a otras rutas.
   const navigate = useNavigate();

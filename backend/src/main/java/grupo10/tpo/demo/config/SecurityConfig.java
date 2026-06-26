@@ -64,6 +64,7 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
                     ).permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/productos/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/categorias/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/marcas/**").permitAll()
                     .requestMatchers("/api/carrito/**").permitAll()
                     .anyRequest().authenticated()
             )

@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getUserProfile, updateLocalUser } from '../store/slices/userSlice';
 import { Link } from 'react-router-dom';
-import Orders from '../components/Orders';
 import './Profile.css';
 
 function Profile() {

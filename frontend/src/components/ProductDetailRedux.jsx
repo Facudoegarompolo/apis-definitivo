@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { addToCart } from '../store/slices/cartSlice';
 import { styles } from './ProductDetailRedux.styles';
@@ -10,7 +10,6 @@ const ProductDetailRedux = () => {
   const dispatch = useDispatch();
   
   const { id } = useParams();
-  const navigate = useNavigate();
   
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);

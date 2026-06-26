@@ -264,7 +264,7 @@ const userSlice = createSlice({
         state.isAuthenticated = Boolean(usuario)
         saveSession({ usuario })
       })
-      .addCase(checkSession.rejected, (state, action) => {
+      .addCase(checkSession.rejected, (state) => {
         state.loading = false
         state.sessionChecked = true
         state.user = null
