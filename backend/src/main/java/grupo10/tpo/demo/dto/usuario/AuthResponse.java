@@ -1,0 +1,34 @@
+package grupo10.tpo.demo.dto.usuario;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+public class AuthResponse {
+
+    @JsonIgnore
+    private String token;
+    private UsuarioResponse usuario;
+
+    public AuthResponse() {
+    }
+
+    public AuthResponse(String token, UsuarioResponse usuario) {
+        this.token = token;
+        this.usuario = usuario;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public UsuarioResponse getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(UsuarioResponse usuario) {
+        this.usuario = usuario;
+    }
+}

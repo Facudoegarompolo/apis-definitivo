@@ -1,0 +1,25 @@
+.route-error {
+  display: grid;
+  justify-items: start;
+  gap: 1rem;
+  margin: 2rem;
+  padding: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+}
+
+.route-error h1,
+.route-error p {
+  margin: 0;
+  color: inherit;
+}
+
+.route-error a {
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: #ffffff;
+  color: #2d3277;
+  font-weight: 600;
+}
